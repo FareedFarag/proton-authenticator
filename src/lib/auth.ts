@@ -18,7 +18,7 @@ export async function authenticateWithTouchID(): Promise<boolean> {
         // this is a workaround to reopen Raycast after authentication
         execSync('open -a "Raycast"');
       } catch (error) {
-        console.log("Could not reopen Raycast:", error);
+        console.error("Could not reopen Raycast:", error);
       }
 
       if (err) {
