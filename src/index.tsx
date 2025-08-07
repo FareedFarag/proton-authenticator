@@ -115,6 +115,21 @@ export default function Command() {
   };
 
   const handleToggleAuth = async () => {
+    // require authentication to disable Touch ID regardless of current auth state
+    if (authEnabled) {
+      try {
+        const authenticated = await authenticateWithTouchID();
+        if (!authenticated) {
+          showFailureToast("Authentication required to disable Touch ID", { title: "Authentication Failed" });
+          return;
+        }
+      } catch (error) {
+        console.error("Authentication error:", error);
+        showFailureToast("Authentication failed");
+        return;
+      }
+    }
+
     const newAuthState = !authEnabled;
     setAuthEnabled(newAuthState);
 
@@ -125,7 +140,6 @@ export default function Command() {
       showToast(Toast.Style.Success, "Touch ID Disabled");
     }
   };
-
   const handleSetAuthTimeout = async (label: string, timeoutMs: number) => {
     setAuthTimeout(timeoutMs);
     showToast(Toast.Style.Success, `Auth timeout set to ${label}`);
