@@ -11,9 +11,8 @@ import {
   Clipboard,
   closeMainWindow,
 } from "@raycast/api";
-import { useCachedState, getProgressIcon, showFailureToast } from "@raycast/utils";
+import { useCachedState, getProgressIcon, showFailureToast, useFrecencySorting } from "@raycast/utils";
 import { useState, useEffect, useMemo } from "react";
-import Fuse from "fuse.js";
 
 import { TOTPAccount } from "./types";
 import { loadAccountsFromStorage, clearStoredData } from "./lib/storage";
@@ -33,7 +32,7 @@ export default function Command() {
   const [authTimestamp, setAuthTimestamp] = useCachedState<number | null>("auth-timestamp", null);
   const [authEnabled, setAuthEnabled] = useCachedState<boolean>("auth-enabled", true);
   const [authTimeout, setAuthTimeout] = useCachedState<number>("auth-timeout", 10 * 60 * 1000); // 10 minutes default
-  const [searchText, setSearchText] = useState("");
+  const [sortingMode, setSortingMode] = useCachedState<"frecency" | "alphabetical">("sorting-mode", "frecency");
 
   const AUTH_TIMEOUT_OPTIONS = {
     "10 minutes": 10 * 60 * 1000,
@@ -44,22 +43,25 @@ export default function Command() {
   const Label = Metadata.Label;
   const Separator = Metadata.Separator;
 
-  // fuzzy search setup
-  const fuse = useMemo(() => {
-    return new Fuse(accounts, {
-      keys: [
-        { name: "name", weight: 0.7 },
-        { name: "issuer", weight: 0.3 },
-      ],
-      threshold: 0.4,
-      includeScore: true,
-    });
-  }, [accounts]);
+  const {
+    data: sortedByFrecency,
+    visitItem,
+    resetRanking,
+  } = useFrecencySorting(accounts, {
+    key: (account) => account.id,
+  });
 
-  const filteredAccounts = useMemo(() => {
-    if (!searchText.trim()) return accounts;
-    return fuse.search(searchText).map((result) => result.item);
-  }, [accounts, searchText, fuse]);
+  // create final sorted accounts based on sorting mode
+  const sortedAccounts = useMemo(() => {
+    if (sortingMode === "alphabetical") {
+      return [...accounts].sort((a, b) => {
+        const nameA = a.issuer || a.name;
+        const nameB = b.issuer || b.name;
+        return nameA.localeCompare(nameB);
+      });
+    }
+    return sortedByFrecency;
+  }, [accounts, sortedByFrecency, sortingMode]);
 
   // check if authentication is still valid or disabled
   const isAuthenticated = useMemo(() => {
@@ -68,7 +70,10 @@ export default function Command() {
     return Date.now() - authTimestamp < authTimeout;
   }, [authTimestamp, authEnabled, authTimeout]);
 
-  const handleCopyCode = async (code: string) => {
+  const handleCopyCode = async (code: string, account: TOTPAccount) => {
+    // track usage for frecency sorting
+    visitItem(account);
+
     await Clipboard.copy(code);
     setTimeout(() => {
       showHUD("Copied to clipboard");
@@ -148,6 +153,30 @@ export default function Command() {
   const handleClearAuth = async () => {
     setAuthTimestamp(null);
     showToast(Toast.Style.Success, "Authentication cleared");
+  };
+
+  const handleToggleSort = () => {
+    const newMode = sortingMode === "frecency" ? "alphabetical" : "frecency";
+    setSortingMode(newMode);
+    showToast(Toast.Style.Success, `Sorted by ${newMode === "frecency" ? "usage" : "name"}`);
+  };
+
+  const handleResetRankings = async () => {
+    const confirmed = await confirmAlert({
+      title: "Reset Usage Rankings",
+      message: "This will reset the usage statistics for all accounts. Are you sure?",
+      primaryAction: {
+        title: "Reset",
+        style: Alert.ActionStyle.Destructive,
+      },
+    });
+
+    if (confirmed) {
+      for (const account of accounts) {
+        await resetRanking(account);
+      }
+      showToast(Toast.Style.Success, "Usage rankings reset");
+    }
   };
 
   useEffect(() => {
@@ -246,13 +275,8 @@ export default function Command() {
   }
 
   return (
-    <List
-      navigationTitle="Proton TOTP Codes"
-      searchBarPlaceholder="Search accounts..."
-      onSearchTextChange={setSearchText}
-      isShowingDetail
-    >
-      {filteredAccounts.map((account) => {
+    <List navigationTitle="Proton TOTP Codes" searchBarPlaceholder="Search accounts..." isShowingDetail>
+      {sortedAccounts.map((account) => {
         const code = codes.get(account.id) || "";
         const nextCode = nextCodes.get(account.id) || "";
         const displayName = account.issuer || account.name;
@@ -298,15 +322,15 @@ export default function Command() {
             actions={
               <ActionPanel>
                 <ActionPanel.Section title="Current Code">
-                  <Action title="Copy Current" icon={Icon.Key} onAction={() => handleCopyCode(code)} />
+                  <Action title="Copy Current" icon={Icon.Clipboard} onAction={() => handleCopyCode(code, account)} />
                   <Action.Paste title="Paste Current" icon={Icon.Key} content={code} />
                 </ActionPanel.Section>
                 <ActionPanel.Section title="Next Code">
                   <Action
                     title="Copy Next"
-                    icon={Icon.Key}
+                    icon={Icon.Clipboard}
                     shortcut={{ modifiers: ["cmd"], key: "n" }}
-                    onAction={() => handleCopyCode(nextCode)}
+                    onAction={() => handleCopyCode(nextCode, account)}
                   />
                   <Action.Paste
                     title="Paste Next"
@@ -322,6 +346,20 @@ export default function Command() {
                     shortcut={{ modifiers: ["cmd"], key: "t" }}
                     onAction={handleToggleAuth}
                   />
+                  <Action
+                    title={`Sort by ${sortingMode === "frecency" ? "Name" : "Usage"}`}
+                    icon={sortingMode === "frecency" ? Icon.ArrowUp : Icon.BarChart}
+                    shortcut={{ modifiers: ["cmd"], key: "s" }}
+                    onAction={handleToggleSort}
+                  />
+                  {sortingMode === "frecency" && (
+                    <Action
+                      title="Reset Usage Rankings"
+                      icon={Icon.ArrowCounterClockwise}
+                      shortcut={{ modifiers: ["cmd", "shift"], key: "u" }}
+                      onAction={handleResetRankings}
+                    />
+                  )}
                   {authEnabled && (
                     <>
                       <ActionPanel.Submenu
