@@ -14,6 +14,8 @@ import {
 import { useCachedState, getProgressIcon, showFailureToast, useFrecencySorting } from "@raycast/utils";
 import { useState, useEffect, useMemo } from "react";
 
+import { STATE_KEYS } from "./lib/constants";
+
 import { TOTPAccount } from "./types";
 import { loadAccountsFromStorage, clearStoredData } from "./lib/storage";
 import { authenticateWithTouchID, hasTouchID } from "./lib/auth";
@@ -22,17 +24,20 @@ import { getProgressColor } from "./lib/colors";
 import SetupForm from "./SetupForm";
 
 export default function Command() {
-  const [accounts, setAccounts] = useCachedState<TOTPAccount[]>("accounts", []);
-  const [needsSetup, setNeedsSetup] = useCachedState<boolean>("needs-setup", false);
+  const [accounts, setAccounts] = useCachedState<TOTPAccount[]>(STATE_KEYS.ACCOUNTS, []);
+  const [needsSetup, setNeedsSetup] = useCachedState<boolean>(STATE_KEYS.NEEDS_SETUP, false);
   const [codes, setCodes] = useState<Map<string, string>>(new Map());
   const [nextCodes, setNextCodes] = useState<Map<string, string>>(new Map());
   const [timeRemainingMap, setTimeRemainingMap] = useState<Map<string, number>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [authTimestamp, setAuthTimestamp] = useCachedState<number | null>("auth-timestamp", null);
-  const [authEnabled, setAuthEnabled] = useCachedState<boolean>("auth-enabled", true);
-  const [authTimeout, setAuthTimeout] = useCachedState<number>("auth-timeout", 10 * 60 * 1000); // 10 minutes default
-  const [sortingMode, setSortingMode] = useCachedState<"frecency" | "alphabetical">("sorting-mode", "frecency");
+  const [authTimestamp, setAuthTimestamp] = useCachedState<number | null>(STATE_KEYS.AUTH_TIMESTAMP, null);
+  const [authEnabled, setAuthEnabled] = useCachedState<boolean>(STATE_KEYS.AUTH_ENABLED, true);
+  const [authTimeout, setAuthTimeout] = useCachedState<number>(STATE_KEYS.AUTH_TIMEOUT, 10 * 60 * 1000); // 10 minutes default
+  const [sortingMode, setSortingMode] = useCachedState<"frecency" | "alphabetical">(
+    STATE_KEYS.SORTING_MODE,
+    "frecency",
+  );
 
   const AUTH_TIMEOUT_OPTIONS = {
     "10 minutes": 10 * 60 * 1000,
@@ -52,6 +57,7 @@ export default function Command() {
   });
 
   // create final sorted accounts based on sorting mode
+
   const sortedAccounts = useMemo(() => {
     if (sortingMode === "alphabetical") {
       return [...accounts].sort((a, b) => {
@@ -222,10 +228,7 @@ export default function Command() {
     };
 
     updateCodes();
-
-    // update timer every second
     const interval = setInterval(updateCodes, 1000);
-
     return () => clearInterval(interval);
   }, [accounts]);
 
@@ -277,7 +280,7 @@ export default function Command() {
   }
 
   return (
-    <List navigationTitle="Proton TOTP Codes" searchBarPlaceholder="Search accounts..." isShowingDetail>
+    <List navigationTitle="TOTP codes" searchBarPlaceholder="Search accounts..." isShowingDetail>
       {sortedAccounts.map((account) => {
         const code = codes.get(account.id) || "";
         const nextCode = nextCodes.get(account.id) || "";
@@ -349,20 +352,6 @@ export default function Command() {
                     shortcut={{ modifiers: ["cmd"], key: "t" }}
                     onAction={handleToggleAuth}
                   />
-                  <Action
-                    title={`Sort by ${sortingMode === "frecency" ? "Name" : "Usage"}`}
-                    icon={sortingMode === "frecency" ? Icon.ArrowUp : Icon.BarChart}
-                    shortcut={{ modifiers: ["cmd"], key: "s" }}
-                    onAction={handleToggleSort}
-                  />
-                  {sortingMode === "frecency" && (
-                    <Action
-                      title="Reset Usage Rankings"
-                      icon={Icon.ArrowCounterClockwise}
-                      shortcut={{ modifiers: ["cmd", "shift"], key: "u" }}
-                      onAction={handleResetRankings}
-                    />
-                  )}
                   {authEnabled && (
                     <>
                       <ActionPanel.Submenu
@@ -389,6 +378,20 @@ export default function Command() {
                   )}
                 </ActionPanel.Section>
                 <ActionPanel.Section title="Settings">
+                  <Action
+                    title={`Sort by ${sortingMode === "frecency" ? "Name" : "Usage"}`}
+                    icon={sortingMode === "frecency" ? Icon.ArrowUp : Icon.BarChart}
+                    shortcut={{ modifiers: ["cmd"], key: "s" }}
+                    onAction={handleToggleSort}
+                  />
+                  {sortingMode === "frecency" && (
+                    <Action
+                      title="Reset Usage Rankings"
+                      icon={Icon.ArrowCounterClockwise}
+                      shortcut={{ modifiers: ["cmd", "shift"], key: "u" }}
+                      onAction={handleResetRankings}
+                    />
+                  )}
                   <Action
                     title="Reset Authenticator Data"
                     icon={Icon.Trash}
