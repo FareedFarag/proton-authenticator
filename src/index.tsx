@@ -26,7 +26,7 @@ export default function Command() {
   const [needsSetup, setNeedsSetup] = useCachedState<boolean>("needs-setup", false);
   const [codes, setCodes] = useState<Map<string, string>>(new Map());
   const [nextCodes, setNextCodes] = useState<Map<string, string>>(new Map());
-  const [timeRemaining, setTimeRemaining] = useState(getTimeRemaining());
+  const [timeRemainingMap, setTimeRemainingMap] = useState<Map<string, number>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [authTimestamp, setAuthTimestamp] = useCachedState<number | null>("auth-timestamp", null);
@@ -208,15 +208,17 @@ export default function Command() {
     const updateCodes = () => {
       const newCodes = new Map<string, string>();
       const newNextCodes = new Map<string, string>();
+      const newRemaining = new Map<string, number>();
       accounts.forEach((account) => {
         const code = generateTOTP(account);
         const nextCode = generateNextTOTP(account);
         newCodes.set(account.id, code);
         newNextCodes.set(account.id, nextCode);
+        newRemaining.set(account.id, getTimeRemaining(account.period || 30));
       });
       setCodes(newCodes);
       setNextCodes(newNextCodes);
-      setTimeRemaining(getTimeRemaining());
+      setTimeRemainingMap(newRemaining);
     };
 
     updateCodes();
@@ -282,7 +284,8 @@ export default function Command() {
         const displayName = account.issuer || account.name;
         const username = account.name;
 
-        const { color, backgroundColor } = getProgressColor(timeRemaining);
+        const remaining = timeRemainingMap.get(account.id) ?? getTimeRemaining(account.period || 30);
+        const { color, backgroundColor } = getProgressColor(remaining);
 
         return (
           <List.Item
@@ -297,7 +300,7 @@ export default function Command() {
                   <Metadata>
                     <Label title="Current Code" text={code} />
                     <Label title="Next Code" text={nextCode} />
-                    <Label title="Time Remaining" text={`${timeRemaining}s`} />
+                    <Label title="Time Remaining" text={`${remaining}s`} />
                     <Separator />
                     <Label title="Username" text={username} />
                     <Label title="Issuer" text={account.issuer || "N/A"} />
@@ -312,7 +315,7 @@ export default function Command() {
             accessories={[
               {
                 icon: {
-                  source: getProgressIcon(timeRemaining / (account.period || 30), color, {
+                  source: getProgressIcon(remaining / (account.period || 30), color, {
                     background: backgroundColor,
                     backgroundOpacity: 1,
                   }),
