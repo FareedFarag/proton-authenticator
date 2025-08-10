@@ -94,7 +94,7 @@ export default function Command() {
     // track usage for frecency sorting
     visitItem(account);
 
-    await Clipboard.copy(code);
+    await Clipboard.copy(code, { concealed: true });
     setTimeout(() => {
       showHUD("Copied to clipboard");
     }, 100);
@@ -107,7 +107,7 @@ export default function Command() {
         <List.EmptyView
           title="Touch ID Required"
           description="This extension requires a Mac with Touch ID support."
-          icon="⚠️"
+          icon={Icon.Warning}
         />
       </List>
     );
@@ -360,7 +360,7 @@ export default function Command() {
                   <Action
                     title={authEnabled ? "Disable Touch ID" : "Enable Touch ID"}
                     icon={authEnabled ? Icon.LockDisabled : Icon.Lock}
-                    shortcut={{ modifiers: ["cmd"], key: "t" }}
+                    shortcut={{ modifiers: ["cmd", "shift"], key: "t" }}
                     onAction={handleToggleAuth}
                   />
                   {authEnabled && (
