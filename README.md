@@ -8,44 +8,50 @@ A Raycast extension to quickly access your TOTP codes from Proton Authenticator.
 
 Easily import your secrets into the extension
 
-<video src="https://github.com/user-attachments/assets/f0e5976f-3cf1-4d05-9c82-c855dfbd15ac" width="800" autoplay loop controls></video>
+<video src="https://github.com/user-attachments/assets/ef76a293-ff78-445f-8d4e-98cf8d75a597" width="800" autoplay loop controls></video>
 
 ### Touch ID authentication
 
 Secure your codes with Touch ID authentication
 
-<video src="https://github.com/user-attachments/assets/7807dc36-d675-4950-abde-0369efee0eae" width="800" autoplay loop controls></video>
+<video src="https://github.com/user-attachments/assets/3d96c1c2-563b-469a-9297-a87beca720b0" width="800" autoplay loop controls></video>
 
-### Copy/paste shortcuts
+### Fuzzy search
 
-Convenient shortcuts for copying/pasting current and next codes
+Quickly find accounts with partial matches
 
-<video src="https://github.com/user-attachments/assets/ed7a7207-1428-495a-9bf3-db4a962090a0" width="800" autoplay loop controls></video>
+<video src="https://github.com/user-attachments/assets/4d664351-9a31-45ee-997b-3c5c1f5f0fe0" width="800" autoplay loop controls></video>
+
+### Flexible sorting
+
+Control how entries are sorted either alphabetically or by usage
+
+<video src="https://github.com/user-attachments/assets/31e3758b-9321-462c-a41d-20004e1c007e" width="800" autoplay loop controls></video>
 
 ### Enable/disable Touch ID
 
 If that's how you roll, you may disable Touch ID if you wish
 
-<video src="https://github.com/user-attachments/assets/47cf13f3-51b7-48a0-ae17-1ddf3554a045" width="800" autoplay loop controls></video>
+<video src="https://github.com/user-attachments/assets/0ea91593-81d3-43af-bb43-1dc6f5fa1e12" width="800" autoplay loop controls></video>
 
 ### Control authentication timeout
 
 Modify how long authentication sessions should last before they expire
 
-<video src="https://github.com/user-attachments/assets/b7f03aad-198c-415f-9ec7-c7f6da14f72b" width="800" autoplay loop controls>
+<video src="https://github.com/user-attachments/assets/731981da-fb47-418e-b770-c7832f90fe05" width="800" autoplay loop controls>
 </video>
 
 ### Clear authentication session
 
 Passing your laptop to someone else? Make sure to clear authentication before doing so!
 
-<video src="https://github.com/user-attachments/assets/32c28d5a-2a56-4178-9ff4-6fa5855e0fa5" width="800" autoplay loop controls></video>
+<video src="https://github.com/user-attachments/assets/90a32405-4deb-4f9f-93a0-81a8cdc62ab6" width="800" autoplay loop controls></video>
 
 ### Reset authenticator data
 
 Wish to import a different JSON file? Reset your data (**Warning: this action cannot be undone**)
 
-<video src="https://github.com/user-attachments/assets/884c6906-b6fd-493b-9926-be981d95d348" width="800" autoplay loop controls></video>
+<video src="https://github.com/user-attachments/assets/dd9b8f9b-ddf9-4def-bb60-618503036db7" width="800" autoplay loop controls></video>
 
 ## Limitations
 
@@ -55,13 +61,21 @@ Wish to import a different JSON file? Reset your data (**Warning: this action ca
 
 ## Setup
 
-1. Export your authenticator data from Proton Pass
-2. Upload the JSON file to the tool as prompted
+1. Run the extension in dev mode as follows:
+
+   ```bash
+   npm run dev
+   ```
+
+2. Copy the prebuilds folder into the extension directory as follows:
+
+   ```bash
+   cp -r prebuilds $HOME/.config/raycast/extensions/proton-authenticator
+   ```
+
+3. Export your authenticator data from Proton Pass
+4. Upload the JSON file to the tool as prompted
 
 ## Compatibility
 
 Apple Silicon Macs with Touch ID
-
-## Credits
-
-- The UI was inspired by <https://www.raycast.com/chkpwd/ente-auth>.
