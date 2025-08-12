@@ -406,6 +406,7 @@ export default function Command() {
                   <Action
                     title="Reset Authenticator Data"
                     icon={Icon.Trash}
+                    style={Action.Style.Destructive}
                     shortcut={{ modifiers: ["cmd", "shift"], key: "r" }}
                     onAction={async () => {
                       const confirmed = await confirmAlert({

@@ -2,6 +2,10 @@
 
 A Raycast extension to quickly access your TOTP codes from Proton Authenticator.
 
+> [!IMPORTANT]
+> Please note that this is not the official [Proton Authenticator extension](https://www.raycast.com/Fared/proton-authenticator), but rather a fork that integrates Touch ID support and other authentication-related features.
+> This version cannot be published to the Raycast Store in the meantime due to security concerns, so it is only available as a local extension.
+
 ## Features
 
 ### Import secrets
@@ -61,20 +65,26 @@ Wish to import a different JSON file? Reset your data (**Warning: this action ca
 
 ## Setup
 
-1. Run the extension in dev mode as follows:
+1. Install NPM dependencies:
+
+   ```bash
+   npm install
+   ```
+
+2. Run the extension in dev mode as follows:
 
    ```bash
    npm run dev
    ```
 
-2. Copy the prebuilds folder into the extension directory as follows:
+3. Copy the prebuilds folder into the extension directory as follows:
 
    ```bash
    cp -r prebuilds $HOME/.config/raycast/extensions/proton-authenticator
    ```
 
-3. Export your authenticator data from Proton Pass
-4. Upload the JSON file to the tool as prompted
+4. Export your authenticator data from Proton Pass
+5. Upload the JSON file to the tool as prompted
 
 ## Compatibility
 
